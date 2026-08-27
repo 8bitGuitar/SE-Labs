@@ -1,0 +1,20 @@
+# Secrets and environment
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Dependencies and build output
+node_modules/
+__pycache__/
+*.pyc
+dist/
+build/
+target/
