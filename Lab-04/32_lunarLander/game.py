@@ -74,7 +74,8 @@ class Game:
     def touchdown(self):
         pad = self.pad_under()
         angle = wrap_angle(self.angle)
-        if pad and abs(self.vel.y) <= MAX_SPEED_Y and abs(angle) <= MAX_ANGLE:
+        if (pad and abs(self.vel.x) <= MAX_SPEED_X and abs(self.vel.y) <= MAX_SPEED_Y
+                and abs(angle) <= MAX_ANGLE):
             earned = int((100 + self.fuel) * pad[3])
             self.score += earned
             self.state, self.message = "landed", f"Perfect landing! +{earned}  (Space = next level)"
@@ -86,6 +87,8 @@ class Game:
             reason = "missed the pad"
         elif abs(angle) > MAX_ANGLE:
             reason = "bad angle"
+        elif abs(self.vel.x) > MAX_SPEED_X:
+            reason = "drifting sideways"
         else:
             reason = "too fast"
         self.message = f"Crashed: {reason}!  " + ("Space = retry" if self.lives > 0 else "Game over - R = restart")
