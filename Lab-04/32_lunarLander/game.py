@@ -9,9 +9,13 @@ MAX_SPEED_X, MAX_SPEED_Y, MAX_ANGLE = 25.0, 40.0, 0.25
 FOOT = 12
 
 
+FULL_COLOR, EMPTY_COLOR = (230, 230, 240), (255, 50, 40)
+
+
 def ship_color(fuel_ratio):
     """Return an (r, g, b) hull colour for the given fuel ratio (1.0 = full), or None for the default."""
-    pass
+    t = max(0.0, min(1.0, fuel_ratio))
+    return tuple(int(e + (f - e) * t) for f, e in zip(FULL_COLOR, EMPTY_COLOR))
 
 
 def on_landing(score):
