@@ -10,6 +10,8 @@ FOOT = 12
 
 
 FULL_COLOR, EMPTY_COLOR = (230, 230, 240), (255, 50, 40)
+FIREWORK_COLORS = [(255, 90, 90), (255, 210, 80), (120, 220, 255), (180, 120, 255), (120, 255, 150)]
+particles = []  # each: [x, y, vx, vy, life, color, delay]
 
 
 def ship_color(fuel_ratio):
@@ -20,7 +22,34 @@ def ship_color(fuel_ratio):
 
 def on_landing(score):
     """Called after a successful landing with the points just earned; add fireworks or bonuses here."""
-    pass
+    for _ in range(min(8, 1 + score // 200)):  # bigger payouts (x3 pad) get more bursts
+        cx, cy = random.uniform(120, WIDTH - 120), random.uniform(90, 260)
+        color = random.choice(FIREWORK_COLORS)
+        delay = random.uniform(0.0, 0.8)
+        for _ in range(40):
+            angle, speed = random.uniform(0, math.tau), random.uniform(40, 170)
+            particles.append([cx, cy, math.cos(angle) * speed, math.sin(angle) * speed,
+                              1.4 + delay, color, delay])
+
+
+def update_particles(dt):
+    for p in particles:
+        p[4] -= dt
+        if p[6] > 0:  # burst still waiting to go off
+            p[6] -= dt
+            continue
+        p[2] *= 0.98
+        p[3] = p[3] * 0.98 + 60 * dt
+        p[0] += p[2] * dt
+        p[1] += p[3] * dt
+    particles[:] = [p for p in particles if p[4] > 0]
+
+
+def draw_particles(screen):
+    for x, y, _, _, life, color, delay in particles:
+        if delay <= 0:
+            fade = min(1.0, life / 0.6)
+            pygame.draw.circle(screen, tuple(int(c * fade) for c in color), (x, y), 2)
 
 
 def bonus_life_threshold():
@@ -159,6 +188,7 @@ class Game:
         if self.message:
             label = self.font.render(self.message, True, (255, 255, 120))
             screen.blit(label, label.get_rect(center=(WIDTH // 2, HEIGHT // 3)))
+        draw_particles(screen)
 
 
 def main():
@@ -182,6 +212,7 @@ def main():
                 elif event.key == pygame.K_SPACE and game.state == "crashed" and game.lives > 0:
                     game.new_round()
         game.update(dt, pygame.key.get_pressed())
+        update_particles(dt)
         game.draw(screen)
         pygame.display.flip()
     pygame.quit()
