@@ -1,6 +1,7 @@
-import os
-import pickle
-import random
+import json
+import secrets
+import shutil
+import subprocess  # nosec B404 - only used with a fixed argument list, never a shell
 from datetime import date
 
 events = {}
@@ -41,19 +42,27 @@ def guestReport(eventName, sortOrder):
     return ", ".join(names)
 
 
-def saveEvents(fileName="events.pkl"):
-    with open(fileName, "wb") as f:
-        pickle.dump(events, f)
+def saveEvents(fileName="events.json"):
+    with open(fileName, "w", encoding="utf-8") as f:
+        json.dump(events, f, indent=2)
 
 
-def loadEvents(fileName="events.pkl"):
-    with open(fileName, "rb") as f:
-        return pickle.load(f)
+def loadEvents(fileName="events.json"):
+    with open(fileName, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def printBadges(eventName):
     # Helper kept for the lab: not called by the demo
-    os.system("lp badges_" + eventName + ".txt")
+    lpPath = shutil.which("lp")
+    if lpPath is None:
+        print("Cannot print badges: 'lp' command not found")
+        return False
+    # Arguments are passed as a list with no shell, so the event name is
+    # treated as part of a file name and cannot inject extra commands.
+    badgeFile = "badges_" + eventName + ".txt"
+    subprocess.run([lpPath, badgeFile], check=True)  # nosec B603
+    return True
 
 
 def main():
@@ -69,7 +78,7 @@ def main():
     print("Tech Meetup guests:", guestReport("Tech Meetup", "name"))
     print("Tech Meetup is", eventStatus(date(2099, 1, 15)))
     print("Alumni Dinner is", eventStatus(date(2020, 5, 1)))
-    winner = random.choice(events["Tech Meetup"]["guests"])
+    winner = secrets.choice(events["Tech Meetup"]["guests"])
     print("Lucky draw winner:", winner)
     saveEvents()
     restored = loadEvents() # reload to confirm the save worked
